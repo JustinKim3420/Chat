@@ -1,19 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 
-const InputField = ({inputLabel, type}) => {
+const InputField = ({ inputLabel, type }) => {
+  const [focus, changeFocus] = useState(false);
+  const [input, updateInput] = useState('')
+
+  const handleFocus = (event)=>{
+    if(event.target.value===''){
+      changeFocus(!focus)
+    }
+  }
+
+  const handleChange = (event)=>{
+    updateInput(event.target.value)
+  }
+
   return (
-    <div className='input-field'>
+    <div className="input-field">
+      <label htmlFor={`${inputLabel}-input`} className={focus? "input-label label-focus":"input-label"}>
+        {inputLabel}
+      </label>
       <input
         type={type}
         className="input"
         name={inputLabel}
         id={`${inputLabel}-input`}
+        value={input}
+        onFocus={(event)=>handleFocus(event)}
+        onBlur={(event)=>handleFocus(event)}
+        onChange ={(event)=>handleChange(event)}
       />
-      <label for={`${inputLabel}-input`} className="input-label">
-        {inputLabel}
-      </label>
     </div>
   );
 };
 
-export default InputField
+export default InputField;

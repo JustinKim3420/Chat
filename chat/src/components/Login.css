@@ -6,6 +6,7 @@
 }
 
 .input-field{
+    vertical-align: middle;
     position: relative;
     margin: 0.25rem;
     font-family: 'Roboto', sans-serif;
@@ -14,20 +15,24 @@
 .input{
     box-sizing: border-box;
     padding: 0;
-    height: 4rem;
-    width: 12.5rem;
-    font-size: 1rem;
+    height: 2rem;
+    width: 20rem;
+    font-size: 0.75rem;
 }
 
-input:focus + label {
-    font-size: 0.25rem;
-    top:2px;
-}
 
 .input-label{
     position: absolute;
     left:2px;
-    top:2px;
+    top:50%;
+    transform: translate(0,-50%);
     margin: auto;
     transition: all 0.25s;
+}
+
+.input-label.label-focus{
+    font-size: 0.5rem;
+    top:2px;
+    transform: translate(0,0);
+
 }

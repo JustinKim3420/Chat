@@ -1,10 +1,13 @@
-
-import Login from './components/Login'
+import Login from "./components/Login";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <div>
-      <Login />
+      <Navbar />
+      <div className="container">
+        <Login />
+      </div>
     </div>
   );
 }
