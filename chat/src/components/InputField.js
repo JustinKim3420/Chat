@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 
-const InputField = ({ inputLabel, type }) => {
+const InputField = ({ inputLabel, type, inputValue,updateInput }) => {
   const [focus, changeFocus] = useState(false);
-  const [input, updateInput] = useState('')
 
   const handleFocus = (event)=>{
     if(event.target.value===''){
@@ -24,7 +23,7 @@ const InputField = ({ inputLabel, type }) => {
         className="input"
         name={inputLabel}
         id={`${inputLabel}-input`}
-        value={input}
+        value={inputValue}
         onFocus={(event)=>handleFocus(event)}
         onBlur={(event)=>handleFocus(event)}
         onChange ={(event)=>handleChange(event)}

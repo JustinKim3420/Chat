@@ -15,9 +15,10 @@
 .input{
     box-sizing: border-box;
     padding: 0;
-    height: 2rem;
+    padding-top:0.25rem;
+    height: 2.25rem;
     width: 20rem;
-    font-size: 0.75rem;
+    font-size: 1rem;
 }
 
 
