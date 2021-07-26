@@ -1,15 +1,13 @@
-import React from 'react'
-import {Alert} from 'react-bootstrap'
+import React from "react";
+import { Alert } from "react-bootstrap";
 
-const Notification = ({message, variant})=>{
-    
-    return(
-        <div className={message? '':'d-none'}>
-            <Alert variant={variant}>
-                {message}
-            </Alert>
-        </div>
-    )
-}
+const Notification = ({ message, variant }) => {
 
-export default Notification
+  if (message.length === 0) {
+    return null;
+  }
+
+  return <Alert className='text-center' variant={variant}>{message}</Alert>;
+};
+
+export default Notification;

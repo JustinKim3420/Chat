@@ -5,23 +5,38 @@ import SignUp from "./components/SignUp";
 import Notification from "./components/Notification";
 import { Switch, Route } from "react-router-dom";
 
+let notifyTimeout;
+
 function App() {
   const [authenication, setAuthentication] = useState(
     localStorage.getItem("chat-token")
   );
 
+  const [message, setMessage] = useState("");
+  const [variant, setVariant] = useState("");
+
+  const notify = (message, variant) => {
+    setMessage(message);
+    setVariant(variant);
+    clearTimeout(notifyTimeout)
+    notifyTimeout = setTimeout(() => {
+      setMessage("");
+      setVariant("");
+    }, 5000);
+  };
+
   if (authenication === null) {
     return (
       <div>
         <Navbar />
-        <Notification/>
+        <Notification message={message} variant={variant} />
         <Switch>
           <Route path="/signup">
-            <SignUp />
+            <SignUp notify={notify}/>
           </Route>
           <Route path="/login">
             <div className="container">
-              <Login />
+              <Login notify={notify}/>
             </div>
           </Route>
           <Route path="/">
