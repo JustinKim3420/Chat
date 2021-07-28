@@ -1,5 +1,6 @@
-const { ApolloServer, gql } = require("apollo-server");
+const { ApolloServer, gql, UserInputError } = require("apollo-server");
 const mongoose = require("mongoose");
+const User = require('./models/user')
 
 require("dotenv").config();
 
@@ -43,13 +44,36 @@ const typeDefs = gql`
       password:String!
       email:String!
     ):User
-    login:Token
+    login(username:String!
+      password:String!):Token
   }
 `
 
 const resolvers ={
   Query:{
-    userCount: ()=>3
+    userCount: ()=>User.collection.countDocuments(),
+  },
+
+  Mutation:{
+    createUser:(roots,args)=>{ 
+      if(args.username){
+        const existingUser = User.findOne({username:args.username})
+        if(!existingUser){
+          throw new UserInputError('User already exists')
+        }
+      }
+      if(args.email){
+        const existingEmail = User.findOne({email:args.email})
+        if(!existingEmail){
+          throw new UserInputError('Email is already in use')
+        }
+      }
+      const createUser = require('./resolver/mutations')
+      createUser(args.username,args.password,args.email)
+    },
+    login: (root, args)=>{
+      
+    }
   }
 }
 
