@@ -9,12 +9,14 @@
     "dotenv": "^10.0.0",
     "graphql": "^15.5.1",
     "mongoose": "^5.13.3",
+    "mongoose-unique-validator": "^2.0.3",
     "nodemon": "^2.0.12",
     "react-bootstrap": "^1.6.1"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "nodemon index.js"
   },
   "repository": {
     "type": "git",
