@@ -4,43 +4,48 @@ import { Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 
-const SignUp = ({notify}) => {
+import { CREATE_USER } from "../mutations";
+import { useMutation } from "@apollo/client";
+
+const SignUp = ({ notify }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const history = useHistory()
+  const [createUser, createdUser] = useMutation(CREATE_USER);
+
+  const history = useHistory();
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    
-    if(!username){
-      notify('Please enter a username', 'danger')
+    if (!username) {
+      notify("Please enter a username", "danger");
+      return null;
+    }
+    if (!email) {
+      notify("Please enter an email", "danger");
+      return null;
+    }
+    if (!password) {
+      notify("Please enter a password", "danger");
+      return null;
+    }
+    if (!confirmPassword) {
+      notify("Please confirm your password", "danger");
+      return null;
+    }
+    if (confirmPassword !== password) {
+      notify("Password and confirm password do not match", "danger");
       return null;
     }
 
-    if(!email){
-      notify('Please enter an email', 'danger')
-      return null;
-    }
+    createUser({
+      variables: { username: username, password: password, email: email },
+    });
 
-    if(!password){
-      notify('Please enter a password', 'danger')
-      return null;
-    }
-
-    if(!confirmPassword){
-      notify('Please confirm your password', 'danger')
-      return null;
-    }
-    if(confirmPassword!==password){
-      notify('Password and confirm password do not match', 'danger')
-      return null;
-    }
-
-    history.push('/login')
-    notify(`Successfully create an account with email ${email}`, 'success')
+    history.push("/login");
+    notify(`Successfully create an account with email ${email}`, "success");
   };
 
   return (

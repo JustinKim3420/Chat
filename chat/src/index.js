@@ -1,10 +1,41 @@
+import React from 'react'
 import ReactDOM from "react-dom";
 import App from "./App";
-import { BrowserRouter } from "react-router-dom"
+import { BrowserRouter } from "react-router-dom";
+
+import {
+  ApolloProvider,
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+} from "@apollo/client";
+import {setContext} from '@apollo/client/link/context'
+
+//Setting the header to also have the authorization token 
+const authLink = setContext((_,{headers})=>{
+  const token = localStorage.getItem('chat-token')
+  return(
+    {headers:{
+      ...headers,
+      authorization: token? token : null
+    }}
+  )
+})
+
+const httpLink = new HttpLink({
+  uri: "http://localhost:4000",
+})
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: authLink.concat(httpLink)
+});
 
 ReactDOM.render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
+  <ApolloProvider client={client}>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </ApolloProvider>,
   document.getElementById("root")
 );
