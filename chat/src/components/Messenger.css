@@ -1,0 +1,12 @@
+.btn-circle{
+    display: inline-block;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border:0.1rem solid black;
+}
+
+.friends-list{
+    list-style: none;
+    overflow-y: scroll;
+}

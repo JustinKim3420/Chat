@@ -2,10 +2,49 @@
 
 html{
   font-family: 'Roboto', sans-serif;
+  height:100%;
 }
 
 body{
   margin:0;
   padding:0;
+  height:100%;
 }
 
+#root{
+  height:100%;
+}
+
+.app{
+  display: flex;
+  flex-direction: column;
+}
+
+.full-height{
+  height:100%;
+}
+
+.overflow-scroll{
+  overflow: scroll;
+}
+
+.overflow-hidden{
+  overflow: hidden;
+}
+
+.fixed{
+  display: fixed;
+}
+
+.flex-nowrap{
+  flex-wrap: nowrap;
+}
+
+
+.inline-flex{
+  display: inline-flex;
+} 
+
+.border-right{
+    border-right: 0.1rem solid black;
+}
