@@ -7,6 +7,42 @@
 }
 
 .friends-list{
+    display: inline-block;
     list-style: none;
     overflow-y: scroll;
+    margin: 0;
+    padding: 0;
+    border-left:0.1rem solid black;
+    border-right:0.1rem solid black;
+}
+
+.friend{
+    display: table-row;
+}
+
+.messages{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    align-content: stretch;
+    flex:1;
+}
+
+.chat{
+    flex: 1 1 auto;
+}
+
+.send-message-area{
+    display: flex;
+    height: 2.5rem;
+}
+
+.message-input{
+    flex:1 1 auto;
+    resize: none;
+    white-space: pre-wrap;
+}
+
+.send-button{
+
 }

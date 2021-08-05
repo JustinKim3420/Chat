@@ -5,7 +5,7 @@ import './Messenger.css'
 
 const Messenger = ()=>{
     return(
-        <div className='container flex-fill overflow-hidden'>
+        <div className='container flex-fill overflow-hidden flex-row'>
             <FriendsList />
             <Messages />
         </div>

@@ -40,6 +40,14 @@ body{
   flex-wrap: nowrap;
 }
 
+.flex-fill{
+  display: flex;
+  flex:1 1 auto;
+}
+
+.flex-row{
+  flex-direction: row;
+}
 
 .inline-flex{
   display: inline-flex;
@@ -47,4 +55,8 @@ body{
 
 .border-right{
     border-right: 0.1rem solid black;
+}
+
+.inline-block{
+  display: inline-block;
 }

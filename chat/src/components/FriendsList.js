@@ -2,23 +2,8 @@ import React from "react";
 
 const FriendsList = () => {
   return (
-    <ul className="border-right friends-list full-height pe-3 ps-0">
-      <li>
-        <button className="btn-circle my-1">
-          <span>JK</span>
-        </button>
-      </li>
-      <li>
-        <button className="btn-circle my-1">
-          <span>JK</span>
-        </button>
-      </li>
-      <li>
-        <button className="btn-circle my-1">
-          <span>JK</span>
-        </button>
-      </li>
-      <li>
+    <ul className=" friends-list full-height px-3">
+      <li className='friend'>
         <button className="btn-circle my-1">
           <span>JK</span>
         </button>
