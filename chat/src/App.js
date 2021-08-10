@@ -8,9 +8,9 @@ import Messenger from "./components/Messenger";
 import Users from "./components/Users";
 import "./App.css";
 
-import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client";
 import { LOGIN } from "./mutations";
-import { CURRENT_USER, USER_NUMBERS } from "./queries";
+import { CURRENT_USER } from "./queries";
 
 let notifyTimeout;
 
@@ -21,22 +21,30 @@ function App() {
 
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("");
-  const [login, userToken] = useMutation(LOGIN);
+
+  const client = useApolloClient();
+  const [login, userToken] = useMutation(LOGIN, {
+    onError: (error) => {
+      console.log(error);
+      notify(error.graphQLErrors[0].message, 'danger');
+    },
+  });
   const currentUser = useQuery(CURRENT_USER);
 
-  const [testQuery, testData] = useLazyQuery(CURRENT_USER);
-  const [testNumber, numberOfUsers] = useLazyQuery(USER_NUMBERS);
-
   useEffect(() => {
+    console.log(userToken);
     if (window.localStorage.getItem("chat-token")) {
       setAuthorization(window.localStorage.getItem("chat-token"));
     }
-    if (userToken.data && !userToken.loading) {
-      const token = `bearer ${userToken.data.login.value}`;
-      setAuthorization(token);
-      window.localStorage.setItem("chat-token", token);
+    if (userToken.called) {
+      if (userToken.data) {
+        const token = `bearer ${userToken.data.login.value}`;
+        setAuthorization(token);
+        window.localStorage.setItem("chat-token", token);
+      }
     }
-  }, [userToken.data, userToken.loading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userToken.data]);
 
   const notify = (message, variant) => {
     setMessage(message);
@@ -54,7 +62,6 @@ function App() {
         <Navbar
           authorization={authorization}
           setAuthorization={setAuthorization}
-          login={login}
         />
         <Notification message={message} variant={variant} />
         <Switch>
@@ -75,12 +82,13 @@ function App() {
       </div>
     );
   }
-  
+
   return (
     <div className="app full-height">
       <Navbar
         authorization={authorization}
         setAuthorization={setAuthorization}
+        client={client}
         currentUser={currentUser}
       />
       <Switch>

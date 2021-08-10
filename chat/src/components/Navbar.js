@@ -1,12 +1,12 @@
-import React from "react";
+import React,{useEffect} from "react";
 import { Container, Navbar as Nav, Nav as Link } from "react-bootstrap";
 import { useHistory, Link as RouterLink } from "react-router-dom";
 
-const Navbar = ({ setAuthorization, authorization, currentUser,login }) => {
+const Navbar = ({ setAuthorization, authorization, currentUser}) => {
   const history = useHistory();
 
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    console.log('logout')
     setAuthorization("");
     window.localStorage.clear();
     history.push("/");
@@ -34,11 +34,11 @@ const Navbar = ({ setAuthorization, authorization, currentUser,login }) => {
               Users
             </RouterLink>
           </Link>
-          {/* {
-            (currentUser && currentUser.loading) 
-            ? null
-            : <div className='nav-text mx-auto'>You are signed in as</div>
-          } */}
+          {
+            (currentUser && (currentUser.data && !currentUser.loading)) 
+            ? <div className='nav-text mx-auto'>You are signed in as {currentUser.data.me.username}</div>
+            :null 
+          }
           {authorization ? (
             <Link className="ms-auto">
               <Link.Link onClick={(event) => handleLogout(event)}>

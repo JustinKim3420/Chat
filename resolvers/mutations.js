@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const { UserInputError } = require("apollo-server");
 
 const addUser = async (username, password, email) => {
   const saltRounds = 10;
@@ -27,6 +28,7 @@ const login = async (username, password) => {
       };
     }
   }
+  throw new UserInputError('Username and password combination is incorrect')
 };
 
 module.exports = {

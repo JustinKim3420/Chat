@@ -89,7 +89,6 @@ const resolvers = {
     },
     me: async (root, args, context)=>{
       const currentUser = await User.findOne({username:context.currentUser.username})
-      console.log(currentUser)
       return(currentUser)
     }
   },
