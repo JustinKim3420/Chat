@@ -1,7 +1,8 @@
 const { ApolloServer, gql, UserInputError } = require("apollo-server");
+const { GraphQLScalarType, Kind } = require("graphql");
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const User = require("./models/user");
-
 require("dotenv").config();
 
 //Creating function to connect to my mongoDB
@@ -27,16 +28,41 @@ const authenticateUser = async (request)=>{
   if (auth && auth.toLowerCase().startsWith('bearer ')){
     const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
     const currentUser = await User.findOne({username:decodedToken.username})
-    console.log(currentUser)
     return {currentUser}
   }
 }
 
+const dateScalar = new GraphQLScalarType({
+  name:'Date',
+  description: 'Custom Date scalar type',
+  serialize:(value)=>value.getTime(),
+  parseValue:(value)=>new Date(value),
+  parseLiteral:(ast)=>{
+    if(ast.kind ===Kind.INT){
+      return new Date(parseInt(ast.value,10))
+    }
+    return null;
+  }
+})
+
 const typeDefs = gql`
+  scalar Date
+
+  type Message{
+    message:String!
+    date:Date!
+  }
+
+  type LinkedUser{
+    user:User!
+    isFriend:Boolean!
+    messages:[Message!]!
+  }
+
   type User {
     username: String!
     email: String!
-    linked: [User!]!
+    linked: [LinkedUser!]
     _id: ID!
   }
 
@@ -46,6 +72,7 @@ const typeDefs = gql`
 
   type Query {
     userCount: Int!
+    me:User
   }
 
   type Mutation {
@@ -55,8 +82,16 @@ const typeDefs = gql`
 `;
 
 const resolvers = {
+  Date:dateScalar,
   Query: {
-    userCount: () => User.collection.countDocuments(),
+    userCount: () => {
+      return User.collection.countDocuments()
+    },
+    me: async (root, args, context)=>{
+      const currentUser = await User.findOne({username:context.currentUser.username})
+      console.log(currentUser)
+      return(currentUser)
+    }
   },
 
   Mutation: {
@@ -93,7 +128,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context:async ({req})=>{
-    return authenticateUser(req)
+    return (await authenticateUser(req))
   }
 });
 

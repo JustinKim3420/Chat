@@ -13,7 +13,7 @@ const SignUp = ({ notify }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [createUser, createdUser] = useMutation(CREATE_USER);
+  const [createUser] = useMutation(CREATE_USER);
 
   const history = useHistory();
 
@@ -39,7 +39,6 @@ const SignUp = ({ notify }) => {
       notify("Password and confirm password do not match", "danger");
       return null;
     }
-
     createUser({
       variables: { username: username, password: password, email: email },
     });

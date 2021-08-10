@@ -5,7 +5,6 @@ export const CREATE_USER = gql`
     addUser(username: $username, password: $password, email: $email) {
         username
         email
-        linked
         _id
     }
   }

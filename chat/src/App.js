@@ -5,10 +5,12 @@ import Navbar from "./components/Navbar";
 import SignUp from "./components/SignUp";
 import Notification from "./components/Notification";
 import Messenger from "./components/Messenger";
+import Users from "./components/Users";
 import "./App.css";
 
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
 import { LOGIN } from "./mutations";
+import { CURRENT_USER, USER_NUMBERS } from "./queries";
 
 let notifyTimeout;
 
@@ -16,11 +18,14 @@ function App() {
   const [authorization, setAuthorization] = useState(
     window.localStorage.getItem("chat-token")
   );
-  console.log(authorization);
 
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("");
   const [login, userToken] = useMutation(LOGIN);
+  const currentUser = useQuery(CURRENT_USER);
+
+  const [testQuery, testData] = useLazyQuery(CURRENT_USER);
+  const [testNumber, numberOfUsers] = useLazyQuery(USER_NUMBERS);
 
   useEffect(() => {
     if (window.localStorage.getItem("chat-token")) {
@@ -49,6 +54,7 @@ function App() {
         <Navbar
           authorization={authorization}
           setAuthorization={setAuthorization}
+          login={login}
         />
         <Notification message={message} variant={variant} />
         <Switch>
@@ -69,14 +75,18 @@ function App() {
       </div>
     );
   }
-
+  
   return (
     <div className="app full-height">
       <Navbar
         authorization={authorization}
         setAuthorization={setAuthorization}
+        currentUser={currentUser}
       />
       <Switch>
+        <Route path="/users">
+          <Users />
+        </Route>
         <Route path="/">
           <Messenger />
         </Route>

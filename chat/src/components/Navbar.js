@@ -1,36 +1,44 @@
-import { useApolloClient } from "@apollo/client";
-import React, { useEffect } from "react";
+import React from "react";
 import { Container, Navbar as Nav, Nav as Link } from "react-bootstrap";
-import {useHistory} from 'react-router-dom'
+import { useHistory, Link as RouterLink } from "react-router-dom";
 
-const Navbar = ({ setAuthorization, authorization }) => {
-  const client = useApolloClient();
-  const history= useHistory();
+const Navbar = ({ setAuthorization, authorization, currentUser,login }) => {
+  const history = useHistory();
+
 
   const handleLogout = () => {
-    setAuthorization('')
-    localStorage.clear();
-    client.resetStore();
-    history.push('/')
+    setAuthorization("");
+    window.localStorage.clear();
+    history.push("/");
   };
 
   const handleLogin = () => {
-    history.push('/')
+    history.push("/");
   };
-
-  useEffect(() => {
-    console.log(authorization);
-  }, [authorization]);
-
+  
   return (
     <Nav bg="primary" variant="dark" expand="lg">
       <Container>
-        <Nav.Brand href="#home">Messenger</Nav.Brand>
+        <RouterLink to="/home" className='nav-brand'>
+          Messenger
+        </RouterLink>
         <Nav.Toggle aria-controls="basic-navbar-nav" />
         <Nav.Collapse id="basic-navbar-nav">
-          <Link className="me-auto">
-            <Link.Link href="#home">Home</Link.Link>
+          <Link>
+            <RouterLink to="/home" className='nav-item'>
+              Home
+            </RouterLink>
           </Link>
+          <Link>
+            <RouterLink to="/users" className='nav-item'>
+              Users
+            </RouterLink>
+          </Link>
+          {/* {
+            (currentUser && currentUser.loading) 
+            ? null
+            : <div className='nav-text mx-auto'>You are signed in as</div>
+          } */}
           {authorization ? (
             <Link className="ms-auto">
               <Link.Link onClick={(event) => handleLogout(event)}>
@@ -39,9 +47,7 @@ const Navbar = ({ setAuthorization, authorization }) => {
             </Link>
           ) : (
             <Link className="ms-auto">
-              <Link.Link onClick={() => handleLogin()}>
-                Log in
-              </Link.Link>
+              <Link.Link onClick={() => handleLogin()}>Log in</Link.Link>
             </Link>
           )}
         </Nav.Collapse>

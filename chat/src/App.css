@@ -53,10 +53,44 @@ body{
   display: inline-flex;
 } 
 
+.flex{
+  display:flex
+}
+
+.align-center{
+  align-items: center;
+}
+
 .border-right{
     border-right: 0.1rem solid black;
 }
 
 .inline-block{
   display: inline-block;
+}
+
+.nav-item{
+  text-decoration: none;
+  padding:0.5rem;
+  color: lightgray;
+  transition:0.25s;
+}
+.nav-item:hover{
+  color: white;
+  transition:0.25s;
+}
+
+.nav-brand{
+  text-decoration: none;
+  border: 0.1rem solid white;
+  border-radius: 0.5rem;
+  padding:0.25rem;
+  color: lightgray;
+}
+.nav-brand:hover{
+  color:white;
+}
+
+.nav-text{
+  color:lightgray;
 }
