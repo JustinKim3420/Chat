@@ -13,7 +13,12 @@ const SignUp = ({ notify }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [createUser] = useMutation(CREATE_USER);
+  const [createUser, createdUser] = useMutation(CREATE_USER, {
+    onError: (error) => {
+      console.log(error);
+      notify(error.graphQLErrors[0].message, "danger");
+    },
+  });
 
   const history = useHistory();
 
@@ -42,9 +47,11 @@ const SignUp = ({ notify }) => {
     createUser({
       variables: { username: username, password: password, email: email },
     });
-
-    history.push("/login");
-    notify(`Successfully create an account with email ${email}`, "success");
+    console.log(createdUser)
+    if (createdUser.called && !createdUser.error) {
+      history.push("/login");
+      notify(`Successfully create an account with username ${username} and email ${email}`, "success");
+    }
   };
 
   return (

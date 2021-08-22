@@ -23,40 +23,42 @@ const connectDB = () => {
     });
 };
 
-const authenticateUser = async (request)=>{
+const authenticateUser = async (request) => {
+  //Everytime a request is sent, it checks the header for jwt
+  //If the token exists and is in the correct format, returns an object with the username and sets as context
   const auth = request ? request.headers.authorization : null;
-  if (auth && auth.toLowerCase().startsWith('bearer ')){
-    const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
-    const currentUser = await User.findOne({username:decodedToken.username})
-    return {currentUser}
+  if (auth && auth.toLowerCase().startsWith("bearer ")) {
+    const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET);
+    const currentUser = await User.findOne({ username: decodedToken.username });
+    return { currentUser };
   }
-}
+};
 
 const dateScalar = new GraphQLScalarType({
-  name:'Date',
-  description: 'Custom Date scalar type',
-  serialize:(value)=>value.getTime(),
-  parseValue:(value)=>new Date(value),
-  parseLiteral:(ast)=>{
-    if(ast.kind ===Kind.INT){
-      return new Date(parseInt(ast.value,10))
+  name: "Date",
+  description: "Custom Date scalar type",
+  serialize: (value) => value.getTime(),
+  parseValue: (value) => new Date(value),
+  parseLiteral: (ast) => {
+    if (ast.kind === Kind.INT) {
+      return new Date(parseInt(ast.value, 10));
     }
     return null;
-  }
-})
+  },
+});
 
 const typeDefs = gql`
   scalar Date
 
-  type Message{
-    message:String!
-    date:Date!
+  type Message {
+    message: String!
+    date: Date!
   }
 
-  type LinkedUser{
-    user:User!
-    isFriend:Boolean!
-    messages:[Message!]!
+  type LinkedUser {
+    user: User!
+    isFriend: Boolean!
+    messages: [Message!]!
   }
 
   type User {
@@ -71,26 +73,35 @@ const typeDefs = gql`
   }
 
   type Query {
-    userCount: Int!
-    me:User
+    allUsers: [User!]!
+    me: User
   }
 
   type Mutation {
     addUser(username: String!, password: String!, email: String!): User
+    addFriend(friendUsername: String!): User!
+    deleteFriend(friendUsername:String!):User!
     login(username: String!, password: String!): Token
   }
 `;
 
 const resolvers = {
-  Date:dateScalar,
+  Date: dateScalar,
   Query: {
-    userCount: () => {
-      return User.collection.countDocuments()
+    allUsers: () => User.find({}).populate("user"),
+    me: async (root, args, context) => {
+      const currentUser = await User.findOne({
+        username: context.currentUser.username,
+      }).populate({
+        path:'linked',
+        populate:{
+          path:'user',
+          model:'User'
+        }
+      });
+      console.log(currentUser)
+      return currentUser;
     },
-    me: async (root, args, context)=>{
-      const currentUser = await User.findOne({username:context.currentUser.username})
-      return(currentUser)
-    }
   },
 
   Mutation: {
@@ -110,6 +121,20 @@ const resolvers = {
       const { addUser } = require("./resolvers/mutations");
       return addUser(args.username, args.password, args.email);
     },
+    addFriend: (root, args, context) => {
+      if (!context.currentUser) {
+        throw new UserInputError("Invalid token");
+      }
+      const {addFriend} = require('./resolvers/mutations')
+      return addFriend(context.currentUser.username, args.friendUsername)
+    },
+    deleteFriend:(root, args, context)=>{
+      if(!context.currentUser){
+        throw new UserInputError('Invalid token')
+      }
+      const {deleteFriend} = require('./resolvers/mutations')
+      return deleteFriend(context.currentUser.username, args.friendUsername)
+    },
     login: (root, args) => {
       if (!args.username) {
         throw new UserInputError("Invalid username");
@@ -126,9 +151,9 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context:async ({req})=>{
-    return (await authenticateUser(req))
-  }
+  context: async ({ req }) => {
+    return await authenticateUser(req);
+  },
 });
 
 module.exports = {

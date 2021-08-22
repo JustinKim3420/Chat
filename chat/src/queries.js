@@ -9,6 +9,10 @@ export const CURRENT_USER = gql`
           username
         }
         isFriend
+        messages {
+          message
+          date
+        }
       }
       email
       _id
@@ -16,8 +20,11 @@ export const CURRENT_USER = gql`
   }
 `;
 
-export const USER_NUMBERS = gql`
-  query numberOfUsers {
-    userCount
+export const ALL_USERS = gql`
+  query allUsers {
+    allUsers {
+      username
+      _id
+    }
   }
 `;

@@ -1,12 +1,11 @@
-import React,{useEffect} from "react";
+import React from "react";
 import { Container, Navbar as Nav, Nav as Link } from "react-bootstrap";
 import { useHistory, Link as RouterLink } from "react-router-dom";
 
-const Navbar = ({ setAuthorization, authorization, currentUser}) => {
+const Navbar = ({ setAuthorization, authorization, currentUser }) => {
   const history = useHistory();
 
   const handleLogout = async () => {
-    console.log('logout')
     setAuthorization("");
     window.localStorage.clear();
     history.push("/");
@@ -15,30 +14,30 @@ const Navbar = ({ setAuthorization, authorization, currentUser}) => {
   const handleLogin = () => {
     history.push("/");
   };
-  
+
   return (
     <Nav bg="primary" variant="dark" expand="lg">
       <Container>
-        <RouterLink to="/home" className='nav-brand'>
+        <RouterLink to="/home" className="nav-brand">
           Messenger
         </RouterLink>
         <Nav.Toggle aria-controls="basic-navbar-nav" />
         <Nav.Collapse id="basic-navbar-nav">
           <Link>
-            <RouterLink to="/home" className='nav-item'>
+            <RouterLink to="/home" className="nav-item">
               Home
             </RouterLink>
           </Link>
           <Link>
-            <RouterLink to="/users" className='nav-item'>
+            <RouterLink to="/users" className="nav-item">
               Users
             </RouterLink>
           </Link>
-          {
-            (currentUser && (currentUser.data && !currentUser.loading)) 
-            ? <div className='nav-text mx-auto'>You are signed in as {currentUser.data.me.username}</div>
-            :null 
-          }
+          {currentUser ? (
+            <div className="nav-text mx-auto">
+              You are signed in as {currentUser.username}
+            </div>
+          ) : null}
           {authorization ? (
             <Link className="ms-auto">
               <Link.Link onClick={(event) => handleLogout(event)}>

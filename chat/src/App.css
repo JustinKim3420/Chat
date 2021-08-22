@@ -85,10 +85,10 @@ body{
   border: 0.1rem solid white;
   border-radius: 0.5rem;
   padding:0.25rem;
-  color: lightgray;
+  color: white;
 }
 .nav-brand:hover{
-  color:white;
+  color: white;
 }
 
 .nav-text{

@@ -8,9 +8,9 @@ import Messenger from "./components/Messenger";
 import Users from "./components/Users";
 import "./App.css";
 
-import { useMutation, useQuery, useApolloClient } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { LOGIN } from "./mutations";
-import { CURRENT_USER } from "./queries";
+import { CURRENT_USER, ALL_USERS } from "./queries";
 
 let notifyTimeout;
 
@@ -18,21 +18,34 @@ function App() {
   const [authorization, setAuthorization] = useState(
     window.localStorage.getItem("chat-token")
   );
+  const [user, setUser] = useState({});
+  const [allUsers, setAllUsers] = useState([]);
 
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("");
 
-  const client = useApolloClient();
   const [login, userToken] = useMutation(LOGIN, {
     onError: (error) => {
       console.log(error);
-      notify(error.graphQLErrors[0].message, 'danger');
+      notify(error.graphQLErrors[0].message, "danger");
     },
   });
   const currentUser = useQuery(CURRENT_USER);
+  const allUsernames = useQuery(ALL_USERS);
+
+  useEffect(()=>{
+    if(allUsernames.data){
+      setAllUsers(allUsernames.data.allUsers)
+    }
+  },[allUsernames.data])
 
   useEffect(() => {
-    console.log(userToken);
+    if (currentUser.data) {
+      setUser(currentUser.data.me);
+    }
+  }, [currentUser.data]);
+
+  useEffect(() => {
     if (window.localStorage.getItem("chat-token")) {
       setAuthorization(window.localStorage.getItem("chat-token"));
     }
@@ -88,12 +101,11 @@ function App() {
       <Navbar
         authorization={authorization}
         setAuthorization={setAuthorization}
-        client={client}
-        currentUser={currentUser}
+        currentUser={user}
       />
       <Switch>
         <Route path="/users">
-          <Users />
+          <Users allUsers={allUsers} user={user} notify={notify}/>
         </Route>
         <Route path="/">
           <Messenger />
