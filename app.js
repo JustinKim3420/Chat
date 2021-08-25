@@ -99,7 +99,6 @@ const resolvers = {
           model:'User'
         }
       });
-      console.log(currentUser)
       return currentUser;
     },
   },

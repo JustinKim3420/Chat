@@ -21,9 +21,9 @@ export const LOGIN = gql`
 export const ADD_FRIEND = gql`
   mutation addFriend($friendUsername: String!) {
     addFriend(friendUsername: $friendUsername) {
-      username
       linked {
         user {
+          username
           _id
         }
         isFriend
@@ -42,6 +42,7 @@ export const DELETE_FRIEND = gql`
       username
       linked {
         user {
+          username
           _id
         }
         isFriend

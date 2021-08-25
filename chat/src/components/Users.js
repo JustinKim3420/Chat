@@ -4,8 +4,10 @@ import { ListGroup, Button } from "react-bootstrap";
 import { ADD_FRIEND, DELETE_FRIEND } from "../mutations";
 import { useMutation } from "@apollo/client";
 
-const Users = ({ allUsers, user, notify }) => {
+const Users = ({ allUsers, user, setUser, notify }) => {
   const [linkedUsers, setLinkedUser] = useState([]);
+  console.log(linkedUsers)
+  console.log(user)
 
   const [addFriend, userAfterAdd] = useMutation(ADD_FRIEND, {
     onError: (error) => {
@@ -22,32 +24,44 @@ const Users = ({ allUsers, user, notify }) => {
     },
   });
 
+
+  //Updating the user by taking the current user's info and updating the linked key
+  useEffect(() => {
+    if (userAfterAdd.data) {
+      const updatedLinkUser = {...user};
+      updatedLinkUser.linked = userAfterAdd.data.addFriend.linked;
+      setUser(updatedLinkUser);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userAfterAdd.data]);
+
+  useEffect(() => {
+    if (userAfterDelete.data) {
+      const updatedLinkUser = {...user};
+      updatedLinkUser.linked = userAfterDelete.data.deleteFriend.linked;
+      setUser(updatedLinkUser);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userAfterDelete.data]);
+
+  useEffect(() => {
+    if (user.linked) {
+        const linkedUsers = user.linked.map((linkedUser) => {
+          return linkedUser.user.username;
+        });
+        setLinkedUser(linkedUsers);
+    }
+  }, [user.linked]);
+
   const handleAddClick = (event, friendUsername) => {
     event.preventDefault();
-    const newLinkedUserList = linkedUsers.concat(friendUsername);
-    setLinkedUser(newLinkedUserList);
     addFriend({ variables: { friendUsername } });
   };
 
   const handleDeleteClick = (event, friendUsername) => {
     event.preventDefault();
-    const newLinkedUserList = linkedUsers.filter(
-      (username) => username !== friendUsername
-    );
-    setLinkedUser(newLinkedUserList);
     deleteFriend({ variables: { friendUsername } });
   };
-
-  useEffect(() => {
-    if (user.linked) {
-      if (user.linked.length > 0) {
-        const linkedUsers = user.linked.map((linkedUser) => {
-          return linkedUser.user.username;
-        });
-        setLinkedUser(linkedUsers);
-      }
-    }
-  }, [user]);
 
   return (
     <div className="container">

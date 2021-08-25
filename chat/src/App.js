@@ -105,10 +105,10 @@ function App() {
       />
       <Switch>
         <Route path="/users">
-          <Users allUsers={allUsers} user={user} notify={notify}/>
+          <Users allUsers={allUsers} user={user} setUser={setUser} notify={notify}/>
         </Route>
         <Route path="/">
-          <Messenger />
+          <Messenger currentUser={user}/>
         </Route>
       </Switch>
     </div>

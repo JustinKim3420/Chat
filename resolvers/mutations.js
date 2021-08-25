@@ -41,38 +41,58 @@ const login = async (username, password) => {
 
 const addFriend = async (currentUsername, friendUsername) => {
   const currentUser = await User.findOne({ username: currentUsername });
-  const friendUser = await User.findOne({ username:friendUsername });
+  const friendUser = await User.findOne({ username: friendUsername });
 
-  currentUser.linked=[
+  currentUser.linked = [
     ...currentUser.linked,
     {
-      user:friendUser,
-      isFriend:true,
-      messages:[]
-    }
-  ]
+      user: friendUser._id,
+      isFriend: true,
+      messages: [],
+    },
+  ];
 
-  return currentUser.save()
+  return await (
+    await currentUser.save()
+  )
+    .populate({
+      path: "linked",
+      populate: {
+        path: "user",
+      },
+    })
+    .execPopulate();
 };
 
-const deleteFriend = async (currentUsername, friendUsername)=>{
-  const currentUser = await User.findOne({username:currentUsername}).populate({
-    path:'linked',
-    populate:{
-      path:'user'
-    }
-  })
+const deleteFriend = async (currentUsername, friendUsername) => {
+  const currentUser = await User.findOne({
+    username: currentUsername,
+  }).populate({
+    path: "linked",
+    populate: {
+      path: "user",
+    },
+  });
 
-  currentUser.linked= currentUser.linked.filter((linkedInfo)=>{
-    return linkedInfo.user.username !== friendUsername
-  })
+  currentUser.linked = currentUser.linked.filter((linkedInfo) => {
+    return linkedInfo.user.username !== friendUsername;
+  });
 
-  return currentUser.save();
-}
+  return await (
+    await currentUser.save()
+  )
+    .populate({
+      path: "linked",
+      populate: {
+        path: "user",
+      },
+    })
+    .execPopulate();
+};
 
 module.exports = {
   addUser,
   login,
   addFriend,
-  deleteFriend
+  deleteFriend,
 };
