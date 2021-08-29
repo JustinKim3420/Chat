@@ -6,8 +6,6 @@ import { useMutation } from "@apollo/client";
 
 const Users = ({ allUsers, user, setUser, notify }) => {
   const [linkedUsers, setLinkedUser] = useState([]);
-  console.log(linkedUsers)
-  console.log(user)
 
   const [addFriend, userAfterAdd] = useMutation(ADD_FRIEND, {
     onError: (error) => {
@@ -27,6 +25,7 @@ const Users = ({ allUsers, user, setUser, notify }) => {
 
   //Updating the user by taking the current user's info and updating the linked key
   useEffect(() => {
+    console.log('userAfterAdd')
     if (userAfterAdd.data) {
       const updatedLinkUser = {...user};
       updatedLinkUser.linked = userAfterAdd.data.addFriend.linked;
@@ -36,6 +35,7 @@ const Users = ({ allUsers, user, setUser, notify }) => {
   }, [userAfterAdd.data]);
 
   useEffect(() => {
+    console.log('userAfterDelete')
     if (userAfterDelete.data) {
       const updatedLinkUser = {...user};
       updatedLinkUser.linked = userAfterDelete.data.deleteFriend.linked;
@@ -45,6 +45,7 @@ const Users = ({ allUsers, user, setUser, notify }) => {
   }, [userAfterDelete.data]);
 
   useEffect(() => {
+    console.log('initialization of linked')
     if (user.linked) {
         const linkedUsers = user.linked.map((linkedUser) => {
           return linkedUser.user.username;

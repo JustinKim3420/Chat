@@ -54,3 +54,14 @@ export const DELETE_FRIEND = gql`
     }
   }
 `;
+
+export const SEND_MESSAGE = gql`
+  mutation sendMessage($message:String!, $friendUsername:String!){
+    sendMessage(
+      message:$message,
+      friendUsername:$friendUsername
+    ){ 
+      message
+    }
+  }
+`

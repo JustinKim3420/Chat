@@ -9,6 +9,10 @@ const linkedSchema = new mongoose.Schema({
   isFriend: Boolean,
   messages: [
     {
+      sentUser: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      },
       message: String,
       date: Date,
     },
@@ -40,7 +44,6 @@ userSchema.plugin(uniqueValidator);
 userSchema.set('toJSON',{
     transform:(document, returnedObject)=>{
         delete returnedObject.__v
-        delete returnedObject.passwordHash
     }
 })
 

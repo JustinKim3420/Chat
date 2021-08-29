@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { UserInputError } = require("apollo-server");
+const mongoose = require("mongoose");
 
 const addUser = async (username, password, email) => {
   const saltRounds = 10;
@@ -52,6 +53,17 @@ const addFriend = async (currentUsername, friendUsername) => {
     },
   ];
 
+  friendUser.linked = [
+    ...friendUser.linked,
+    {
+      user: currentUser._id,
+      isFriend: true,
+      messages: [],
+    },
+  ];
+
+  await friendUser.save();
+
   return await (
     await currentUser.save()
   )
@@ -67,16 +79,18 @@ const addFriend = async (currentUsername, friendUsername) => {
 const deleteFriend = async (currentUsername, friendUsername) => {
   const currentUser = await User.findOne({
     username: currentUsername,
-  }).populate({
-    path: "linked",
-    populate: {
-      path: "user",
-    },
+  });
+  const friendUser = await User.findOne({ username: friendUsername });
+
+  //Updates current and friend users by filtering out the deleted name by _id
+  currentUser.linked = currentUser.linked.filter((linkedInfo) => {
+    return linkedInfo.user.toString() !== friendUser._id.toString();
+  });
+  friendUser.linked = friendUser.linked.filter((linkedInfo) => {
+    return linkedInfo.user.toString() !== currentUser._id.toString();
   });
 
-  currentUser.linked = currentUser.linked.filter((linkedInfo) => {
-    return linkedInfo.user.username !== friendUsername;
-  });
+  await friendUser.save();
 
   return await (
     await currentUser.save()
@@ -90,9 +104,62 @@ const deleteFriend = async (currentUsername, friendUsername) => {
     .execPopulate();
 };
 
+const sendMessage = async (currentUsername, sentMessage, friendUsername) => {
+  const currentUser = await User.findOne({
+    username: currentUsername,
+  });
+  const friendUser = await await User.findOne({ username: friendUsername });
+
+  const currentDate = new Date();
+
+  const updatedCurrentUserLinked = currentUser
+    .linked.map((linkedUser) => {
+      if (linkedUser.user.toString() === friendUser._id.toString()) {
+        return {
+          ...linkedUser.toObject(),
+          messages: linkedUser.messages.concat({
+            sentUser: currentUser.toObject(),
+            message: sentMessage,
+            date: currentDate,
+          }),
+        };
+      }
+      return linkedUser;
+    });
+
+  const updatedFriendLinked = friendUser.linked.map((linkedUser) => {
+    if (linkedUser.user.toString() === currentUser._id.toString()) {
+      return {
+        ...linkedUser.toObject(),
+        messages: linkedUser.messages.concat({
+          sentUser: currentUser.toObject(),
+          message: sentMessage,
+          date: currentDate,
+        }),
+      };
+    }
+    return linkedUser;
+  });
+
+  currentUser.linked = updatedCurrentUserLinked;
+  friendUser.linked = updatedFriendLinked;
+  
+  await currentUser.save();
+  await friendUser.save();
+
+  console.log("end of function");
+
+  return {
+    sentUser: currentUser,
+    message: sentMessage,
+    date: currentDate,
+  };
+};
+
 module.exports = {
   addUser,
   login,
   addFriend,
   deleteFriend,
+  sendMessage,
 };

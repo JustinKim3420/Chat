@@ -4,7 +4,7 @@ import Messages from './Messages'
 import './Messenger.css'
 
 const Messenger = ({currentUser})=>{
-    const [focusedUser, setFocusedUser] = useState()
+    const [focusedUser, setFocusedUser] = useState('')
     if(!currentUser.linked){
         return null
     }
@@ -12,7 +12,7 @@ const Messenger = ({currentUser})=>{
     return(
         <div className='container flex-fill overflow-hidden flex-row'>
             <FriendsList linkedUsers={currentUser.linked} setFocusedUser={setFocusedUser}/>
-            <Messages/>
+            <Messages currentUser={currentUser} focusedUser={focusedUser}/>
         </div>
     )
 }
