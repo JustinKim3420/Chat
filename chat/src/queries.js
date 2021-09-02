@@ -10,8 +10,12 @@ export const CURRENT_USER = gql`
         }
         isFriend
         messages {
+          sentUser{
+            _id
+          }
           message
           date
+          _id
         }
       }
       email

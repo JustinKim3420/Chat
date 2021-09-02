@@ -46,10 +46,6 @@
     white-space: pre-wrap;
 }
 
-.send-button{
-
-}
-
 .received-message{
     align-self: flex-start;
     padding: 1rem;

@@ -61,7 +61,12 @@ export const SEND_MESSAGE = gql`
       message:$message,
       friendUsername:$friendUsername
     ){ 
+      _id
+      sentUser{
+        _id
+      }
       message
+      date
     }
   }
 `

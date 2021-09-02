@@ -108,24 +108,23 @@ const sendMessage = async (currentUsername, sentMessage, friendUsername) => {
   const currentUser = await User.findOne({
     username: currentUsername,
   });
-  const friendUser = await await User.findOne({ username: friendUsername });
-
+  const friendUser = await User.findOne({ username: friendUsername });
   const currentDate = new Date();
+  let messageId;
 
-  const updatedCurrentUserLinked = currentUser
-    .linked.map((linkedUser) => {
-      if (linkedUser.user.toString() === friendUser._id.toString()) {
-        return {
-          ...linkedUser.toObject(),
-          messages: linkedUser.messages.concat({
-            sentUser: currentUser.toObject(),
-            message: sentMessage,
-            date: currentDate,
-          }),
-        };
-      }
-      return linkedUser;
-    });
+  const updatedCurrentUserLinked = currentUser.linked.map((linkedUser) => {
+    if (linkedUser.user.toString() === friendUser._id.toString()) {
+      return {
+        ...linkedUser.toObject(),
+        messages: linkedUser.messages.concat({
+          sentUser: currentUser.toObject(),
+          message: sentMessage,
+          date: currentDate,
+        }),
+      };
+    }
+    return linkedUser;
+  });
 
   const updatedFriendLinked = friendUser.linked.map((linkedUser) => {
     if (linkedUser.user.toString() === currentUser._id.toString()) {
@@ -143,13 +142,20 @@ const sendMessage = async (currentUsername, sentMessage, friendUsername) => {
 
   currentUser.linked = updatedCurrentUserLinked;
   friendUser.linked = updatedFriendLinked;
-  
-  await currentUser.save();
-  await friendUser.save();
 
-  console.log("end of function");
+  await friendUser.save();
+  const updatedCurrentUser = await currentUser.save();
+
+  const linkedFriendUser = updatedCurrentUser.linked.find((linkedUser) => {
+    return linkedUser.user.toString() === friendUser._id.toString();
+  });
+  const latestMessage =
+    linkedFriendUser.messages[linkedFriendUser.messages.length - 1];
+
+  messageId = latestMessage._id;
 
   return {
+    _id: messageId,
     sentUser: currentUser,
     message: sentMessage,
     date: currentDate,

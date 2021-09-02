@@ -12,18 +12,31 @@ const Messages = ({ currentUser, focusedUser }) => {
       console.log(error);
     },
   });
+  console.log(sentMessage)
 
   const handleSendButtonClick = (event, message, friendUsername) => {
     event.preventDefault();
     sendMessage({ variables: { message, friendUsername } });
+    setMessage("");
   };
 
   useEffect(() => {
-    if (currentUser.linked) {
-      const messagesWithFocusedUser = currentUser.linked.find(
+    if (sentMessage.data) {
+      console.log('sentMessage setarrayofmessagtes')
+      console.log(sentMessage.data)
+      setArrayOfMessages([...arrayOfMessages, sentMessage.data.sendMessage]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sentMessage.data]);
+
+  useEffect(() => {
+    if (currentUser.linked && focusedUser) {
+      const linkedUser = currentUser.linked.find(
         (linkedUsers) => linkedUsers.user.username === focusedUser
       );
-      setArrayOfMessages(messagesWithFocusedUser);
+      if(linkedUser.messages){
+        setArrayOfMessages(linkedUser.messages);
+      }
     }
   }, [currentUser, focusedUser]);
 
@@ -32,7 +45,7 @@ const Messages = ({ currentUser, focusedUser }) => {
       const chatElement = document.querySelector(".chat");
       chatElement.scrollTo(0, chatElement.scrollHeight);
     }
-  }, [focusedUser]);
+  }, [currentUser, focusedUser, arrayOfMessages]);
 
   if (!focusedUser.length > 0) {
     return (
@@ -45,19 +58,14 @@ const Messages = ({ currentUser, focusedUser }) => {
 
   return (
     <div className="full-height messages ps-3">
-      <h4>Messages with {focusedUser}</h4>
+      <h4 className='message-header'>Messages with {focusedUser}</h4>
       <div className="chat">
-        <div className="received-message">
-          Maecenas magna turpis, interdum sed tristique pharetra, egestas in
-          arcu. Quisque hendrerit, nisi vitae viverra luctus, nulla urna rhoncus
-          tellus, non feugiat nibh metus ut velit. Nullam semper tellus sit amet
-          egestas efficitur. Aliquam interdum pharetra semper. In at lacinia
-          nisi. Etiam dapibus placerat leo sed dapibus.
-        </div>
-        <div className="sent-message">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin lorem
-          mi, egestas blandit urna at, pretium malesuada massa.
-        </div>
+        {arrayOfMessages.map((message) => {
+          if (message.sentUser._id === currentUser._id) {
+            return <div key={message._id} className="sent-message">{message.message}</div>;
+          }
+          return <div key={message._id} className="received-message">{message.message}</div>;
+        })}
       </div>
       <div className="send-message-area">
         <textarea

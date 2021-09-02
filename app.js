@@ -5,6 +5,9 @@ const mongoose = require("mongoose");
 const User = require("./models/user");
 require("dotenv").config();
 
+const {PubSub} = require('graphql-subscriptions')
+const pubsub = new PubSub()
+
 //Creating function to connect to my mongoDB
 const connectDB = () => {
   //connecting to mongoDB and setting options
@@ -51,9 +54,10 @@ const typeDefs = gql`
   scalar Date
 
   type Message {
-    sentUser:User
+    _id:ID!
+    sentUser:User!
     message: String!
-    date: Date
+    date: Date!
   }
 
   type LinkedUser {
@@ -85,6 +89,10 @@ const typeDefs = gql`
     login(username: String!, password: String!): Token
     sendMessage(message:String!,friendUsername:String!):Message!
   }
+
+  type Subscription {
+    messageSent:Message!
+  }
 `;
 
 const resolvers = {
@@ -97,8 +105,7 @@ const resolvers = {
       }).populate({
         path:'linked',
         populate:{
-          path:'user',
-          model:'User'
+          path:'user'
         }
       });
       return currentUser;
@@ -146,14 +153,23 @@ const resolvers = {
       const { login } = require("./resolvers/mutations");
       return login(args.username, args.password);
     },
-    sendMessage:(root,args,context)=>{
+    sendMessage: async (root,args,context)=>{
       if(!context.currentUser){
         throw new UserInputError('Invalid token')
       }
       const {sendMessage} = require('./resolvers/mutations')
-      return sendMessage(context.currentUser.username, args.message, args.friendUsername)
+      const sentMessage = await sendMessage(context.currentUser.username, args.message, args.friendUsername)
+    
+      await pubsub.publish('MESSAGE_SENT',{messageSent:sentMessage})
+
+      return sentMessage
     }
   },
+  Subscription:{
+    messageSent:{
+      subscribe:()=>pubsub.asyncIterator(['MESSAGE_SENT'])
+    }
+  }
 };
 
 const server = new ApolloServer({
