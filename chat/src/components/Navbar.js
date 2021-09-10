@@ -2,15 +2,19 @@ import React from "react";
 import { Container, Navbar as Nav, Nav as Link } from "react-bootstrap";
 import { useHistory, Link as RouterLink } from "react-router-dom";
 
-const Navbar = ({ setAuthorization, authorization, currentUser }) => {
+const Navbar = ({ setAuthorization, authorization, setUser , currentUser, currentUserQuery }) => {
   const history = useHistory();
 
   const handleLogout = async () => {
     setAuthorization("");
+    setUser({});
+    console.log(currentUserQuery.client)
     window.localStorage.clear();
+    await currentUserQuery.client.resetStore()
     history.push("/");
   };
 
+  //Links the user to the page where they can login.
   const handleLogin = () => {
     history.push("/");
   };

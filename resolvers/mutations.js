@@ -1,8 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const { UserInputError } = require("apollo-server");
-const mongoose = require("mongoose");
+const { UserInputError } = require("apollo-server-express");
 
 const addUser = async (username, password, email) => {
   const saltRounds = 10;

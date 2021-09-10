@@ -1,12 +1,19 @@
-const { ApolloServer, gql, UserInputError } = require("apollo-server");
-const { GraphQLScalarType, Kind } = require("graphql");
+const { ApolloServer, gql, UserInputError } = require("apollo-server-express");
+const { GraphQLScalarType, Kind, execute, subscribe } = require("graphql");
+const {SubscriptionServer} = require('subscriptions-transport-ws')
+const {makeExecutableSchema}= require('@graphql-tools/schema')
+const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
+const express = require("express");
+const cors = require("cors");
+const {createServer} = require("http");
+
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const User = require("./models/user");
 require("dotenv").config();
 
-const {PubSub} = require('graphql-subscriptions')
-const pubsub = new PubSub()
+const { PubSub } = require("graphql-subscriptions");
+const pubsub = new PubSub();
 
 //Creating function to connect to my mongoDB
 const connectDB = () => {
@@ -37,6 +44,10 @@ const authenticateUser = async (request) => {
   }
 };
 
+const setContext = async (request) => {
+  return await authenticateUser(request);
+};
+
 const dateScalar = new GraphQLScalarType({
   name: "Date",
   description: "Custom Date scalar type",
@@ -54,8 +65,8 @@ const typeDefs = gql`
   scalar Date
 
   type Message {
-    _id:ID!
-    sentUser:User!
+    _id: ID!
+    sentUser: User!
     message: String!
     date: Date!
   }
@@ -85,13 +96,13 @@ const typeDefs = gql`
   type Mutation {
     addUser(username: String!, password: String!, email: String!): User
     addFriend(friendUsername: String!): User!
-    deleteFriend(friendUsername:String!):User!
+    deleteFriend(friendUsername: String!): User!
     login(username: String!, password: String!): Token
-    sendMessage(message:String!,friendUsername:String!):Message!
+    sendMessage(message: String!, friendUsername: String!): Message!
   }
 
   type Subscription {
-    messageSent:Message!
+    messageSent: Message!
   }
 `;
 
@@ -103,10 +114,10 @@ const resolvers = {
       const currentUser = await User.findOne({
         username: context.currentUser.username,
       }).populate({
-        path:'linked',
-        populate:{
-          path:'user'
-        }
+        path: "linked",
+        populate: {
+          path: "user",
+        },
       });
       return currentUser;
     },
@@ -133,15 +144,15 @@ const resolvers = {
       if (!context.currentUser) {
         throw new UserInputError("Invalid token");
       }
-      const {addFriend} = require('./resolvers/mutations')
-      return addFriend(context.currentUser.username, args.friendUsername)
+      const { addFriend } = require("./resolvers/mutations");
+      return addFriend(context.currentUser.username, args.friendUsername);
     },
-    deleteFriend:(root, args, context)=>{
-      if(!context.currentUser){
-        throw new UserInputError('Invalid token')
+    deleteFriend: (root, args, context) => {
+      if (!context.currentUser) {
+        throw new UserInputError("Invalid token");
       }
-      const {deleteFriend} = require('./resolvers/mutations')
-      return deleteFriend(context.currentUser.username, args.friendUsername)
+      const { deleteFriend } = require("./resolvers/mutations");
+      return deleteFriend(context.currentUser.username, args.friendUsername);
     },
     login: (root, args) => {
       if (!args.username) {
@@ -153,34 +164,54 @@ const resolvers = {
       const { login } = require("./resolvers/mutations");
       return login(args.username, args.password);
     },
-    sendMessage: async (root,args,context)=>{
-      if(!context.currentUser){
-        throw new UserInputError('Invalid token')
+    sendMessage: async (root, args, context) => {
+      if (!context.currentUser) {
+        throw new UserInputError("Invalid token");
       }
-      const {sendMessage} = require('./resolvers/mutations')
-      const sentMessage = await sendMessage(context.currentUser.username, args.message, args.friendUsername)
-    
-      await pubsub.publish('MESSAGE_SENT',{messageSent:sentMessage})
+      const { sendMessage } = require("./resolvers/mutations");
+      const sentMessage = await sendMessage(
+        context.currentUser.username,
+        args.message,
+        args.friendUsername
+      );
 
-      return sentMessage
-    }
+      await pubsub.publish("MESSAGE_SENT", { messageSent: sentMessage });
+
+      return sentMessage;
+    },
   },
-  Subscription:{
-    messageSent:{
-      subscribe:()=>pubsub.asyncIterator(['MESSAGE_SENT'])
-    }
-  }
+  Subscription: {
+    messageSent: {
+      subscribe: () => pubsub.asyncIterator(["MESSAGE_SENT"]),
+    },
+  },
 };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: async ({ req }) => {
-    return await authenticateUser(req);
-  },
-});
+
+//Taken from the apollo server documentation for swapping apollo-server for apollo-server-express
+const startApolloServer = async (typeDefs, resolvers) => {
+  const app = express();
+  const schema = makeExecutableSchema({typeDefs,resolvers})
+  const httpServer = createServer(app);
+
+  app.use(cors());
+
+  const server = new ApolloServer({
+    schema,
+    context: async ({ req }) => {
+      return await setContext(req);
+    },
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+  await server.start();
+  server.applyMiddleware({ app, path: "/" });
+  await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+  console.log(`Server ready at http://localhost:4000${server.graphqlPath}`);
+};
 
 module.exports = {
   connectDB,
-  server,
+  typeDefs,
+  resolvers,
+  startApolloServer,
 };

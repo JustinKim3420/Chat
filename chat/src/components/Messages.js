@@ -12,7 +12,6 @@ const Messages = ({ currentUser, focusedUser }) => {
       console.log(error);
     },
   });
-  console.log(sentMessage)
 
   const handleSendButtonClick = (event, message, friendUsername) => {
     event.preventDefault();
@@ -22,8 +21,6 @@ const Messages = ({ currentUser, focusedUser }) => {
 
   useEffect(() => {
     if (sentMessage.data) {
-      console.log('sentMessage setarrayofmessagtes')
-      console.log(sentMessage.data)
       setArrayOfMessages([...arrayOfMessages, sentMessage.data.sendMessage]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

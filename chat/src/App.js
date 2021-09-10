@@ -30,21 +30,26 @@ function App() {
       notify(error.graphQLErrors[0].message, "danger");
     },
   });
+
   const currentUser = useQuery(CURRENT_USER);
   const allUsernames = useQuery(ALL_USERS);
 
+  //Whenever the data from the server is received, updates the local state to include all Users
   useEffect(()=>{
     if(allUsernames.data){
       setAllUsers(allUsernames.data.allUsers)
     }
   },[allUsernames.data])
 
+  //When the userToken or currentUser are updated, updates the currentUser local state
   useEffect(() => {
     if (currentUser.data) {
       setUser(currentUser.data.me);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.data]);
 
+  //Updates the token when the userToken local state when the token is updated and received
   useEffect(() => {
     if (window.localStorage.getItem("chat-token")) {
       setAuthorization(window.localStorage.getItem("chat-token"));
@@ -54,10 +59,11 @@ function App() {
         const token = `bearer ${userToken.data.login.value}`;
         setAuthorization(token);
         window.localStorage.setItem("chat-token", token);
+        currentUser.refetch()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userToken.data]);
+  }, [userToken.called, userToken.data]);
 
   const notify = (message, variant) => {
     setMessage(message);
@@ -101,7 +107,9 @@ function App() {
       <Navbar
         authorization={authorization}
         setAuthorization={setAuthorization}
+        setUser = {setUser}
         currentUser={user}
+        currentUserQuery = {currentUser}
       />
       <Switch>
         <Route path="/users">
