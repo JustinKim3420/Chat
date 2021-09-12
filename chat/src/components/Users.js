@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { ListGroup, Button } from "react-bootstrap";
 
 import { ADD_FRIEND, DELETE_FRIEND } from "../mutations";
+import { CURRENT_USER } from "../queries";
 import { useMutation } from "@apollo/client";
 
 const Users = ({ allUsers, user, setUser, notify }) => {
   const [linkedUsers, setLinkedUser] = useState([]);
 
   const [addFriend, userAfterAdd] = useMutation(ADD_FRIEND, {
+    refetchQueries:[{query:CURRENT_USER}],
     onError: (error) => {
       console.log(error.graphQLErrors);
       notify(error.graphQLErrors[0].message, "danger");
@@ -16,6 +18,7 @@ const Users = ({ allUsers, user, setUser, notify }) => {
 
   //Deletes friend and the messages sent.
   const [deleteFriend, userAfterDelete] = useMutation(DELETE_FRIEND, {
+    refetchQueries:[{query:CURRENT_USER}],
     onError: (error) => {
       console.log(error.graphQLErrors);
       notify(error.graphQLErrors[0].message, "danger");
@@ -45,7 +48,6 @@ const Users = ({ allUsers, user, setUser, notify }) => {
   }, [userAfterDelete.data]);
 
   useEffect(() => {
-    console.log('initialization of linked')
     if (user.linked) {
         const linkedUsers = user.linked.map((linkedUser) => {
           return linkedUser.user.username;

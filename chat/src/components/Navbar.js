@@ -8,7 +8,6 @@ const Navbar = ({ setAuthorization, authorization, setUser , currentUser, curren
   const handleLogout = async () => {
     setAuthorization("");
     setUser({});
-    console.log(currentUserQuery.client)
     window.localStorage.clear();
     await currentUserQuery.client.resetStore()
     history.push("/");

@@ -7,6 +7,7 @@ export const CURRENT_USER = gql`
       linked {
         user {
           username
+          _id
         }
         isFriend
         messages {

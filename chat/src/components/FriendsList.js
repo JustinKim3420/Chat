@@ -1,10 +1,15 @@
 import React from "react";
 
-const FriendsList = ({ linkedUsers, setFocusedUser }) => {
+const FriendsList = ({ linkedUsers, setFocusedUser, currentUser }) => {
   const handleFriendButtonClick = (event, username) => {
     event.preventDefault();
     setFocusedUser(username);
   };
+
+  if(!currentUser){
+    return null
+  }
+
   return (
     <ul className=" friends-list full-height px-3">
       {linkedUsers.map((linkedUser) => {

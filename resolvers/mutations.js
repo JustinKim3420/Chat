@@ -158,6 +158,7 @@ const sendMessage = async (currentUsername, sentMessage, friendUsername) => {
     sentUser: currentUser,
     message: sentMessage,
     date: currentDate,
+    toFriendID: friendUser._id.toString()
   };
 };
 

@@ -1,11 +1,11 @@
 const { ApolloServer, gql, UserInputError } = require("apollo-server-express");
 const { GraphQLScalarType, Kind, execute, subscribe } = require("graphql");
-const {SubscriptionServer} = require('subscriptions-transport-ws')
-const {makeExecutableSchema}= require('@graphql-tools/schema')
+const { SubscriptionServer } = require("subscriptions-transport-ws");
+const { makeExecutableSchema } = require("@graphql-tools/schema");
 const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
 const express = require("express");
 const cors = require("cors");
-const {createServer} = require("http");
+const { createServer } = require("http");
 
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -68,6 +68,7 @@ const typeDefs = gql`
     _id: ID!
     sentUser: User!
     message: String!
+    toFriendID:String
     date: Date!
   }
 
@@ -89,7 +90,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    allUsers: [User!]!
+    allUsers: [User]!
     me: User
   }
 
@@ -109,17 +110,23 @@ const typeDefs = gql`
 const resolvers = {
   Date: dateScalar,
   Query: {
-    allUsers: () => User.find({}).populate("user"),
+    allUsers: async () => {
+      return await User.find({}).populate("user");
+    },
     me: async (root, args, context) => {
-      const currentUser = await User.findOne({
-        username: context.currentUser.username,
-      }).populate({
-        path: "linked",
-        populate: {
-          path: "user",
-        },
-      });
-      return currentUser;
+      if (context.currentUser) {
+        const currentUser = await User.findOne({
+          username: context.currentUser.username,
+        }).populate({
+          path: "linked",
+          populate: {
+            path: "user",
+          },
+        });
+        return currentUser;
+      } else {
+        return null;
+      }
     },
   },
 
@@ -182,16 +189,17 @@ const resolvers = {
   },
   Subscription: {
     messageSent: {
-      subscribe: () => pubsub.asyncIterator(["MESSAGE_SENT"]),
+      subscribe: () => {
+        return pubsub.asyncIterator(["MESSAGE_SENT"])
+      },
     },
   },
 };
 
-
 //Taken from the apollo server documentation for swapping apollo-server for apollo-server-express
 const startApolloServer = async (typeDefs, resolvers) => {
   const app = express();
-  const schema = makeExecutableSchema({typeDefs,resolvers})
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
   const httpServer = createServer(app);
 
   app.use(cors());
@@ -201,8 +209,32 @@ const startApolloServer = async (typeDefs, resolvers) => {
     context: async ({ req }) => {
       return await setContext(req);
     },
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              subscriptionServer.close();
+            },
+          };
+        },
+      },
+    ],
   });
+
+  const subscriptionServer = SubscriptionServer.create(
+    {
+      schema,
+      execute,
+      subscribe,
+    },
+    {
+      server: httpServer,
+      path: server.graphqlPath,
+    }
+  );
+
   await server.start();
   server.applyMiddleware({ app, path: "/" });
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
