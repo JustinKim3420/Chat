@@ -8,10 +8,15 @@ import Messenger from "./components/Messenger";
 import Users from "./components/Users";
 import "./App.css";
 
-import { useApolloClient, useMutation, useQuery, useSubscription } from "@apollo/client";
+import {
+  useApolloClient,
+  useMutation,
+  useQuery,
+  useSubscription,
+} from "@apollo/client";
 import { LOGIN } from "./mutations";
 import { CURRENT_USER, ALL_USERS } from "./queries";
-import {MESSAGE_SENT} from './subscriptions'
+import { MESSAGE_SENT } from "./subscriptions";
 
 let notifyTimeout;
 
@@ -25,7 +30,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("");
 
-  const client = useApolloClient()
+  const client = useApolloClient();
   const [login, userToken] = useMutation(LOGIN, {
     onError: (error) => {
       console.log(error);
@@ -35,35 +40,75 @@ function App() {
   const currentUser = useQuery(CURRENT_USER);
   const allUsernames = useQuery(ALL_USERS);
 
-  const updateCacheWithSentMessage = (sentMessage)=>{
-    const includedIn = (set,object)=>{
-      return set.map(p=>p._id).includes(object._id)
-    }
-
-    const dataInStore = client.readQuery({query:CURRENT_USER})
-    const linkedUserIndexInStore = dataInStore.me.linked.findIndex((linkedUser)=>{
-      return linkedUser.user._id.toString() === sentMessage.toFriendID
-    })
-    console.log('first')
-    console.log(client.readQuery({query:CURRENT_USER}))
-    if(!includedIn(dataInStore.me.linked[linkedUserIndexInStore].messages, sentMessage)){
-      console.log('inside if statement')
-      client.writeQuery({
-        query:CURRENT_USER,
-        data:{
-          currentUser:dataInStore.me.linked[linkedUserIndexInStore].messages.concat(sentMessage)
+  const updateStateWithSentMessage = (sentMessage) => {
+    if (sentMessage.toFriendID === user._id.toString()) {
+      const updatedLinkedMessages = user.linked.map((linkedUser) => {
+        if (
+          linkedUser.user._id.toString() === sentMessage.sentUser._id.toString()
+        ) {
+          return {
+            ...linkedUser,
+            messages: linkedUser.messages.concat(sentMessage),
+          };
         }
-      })
+        return linkedUser;
+      });
+      console.log({
+        ...user,
+        linked: updatedLinkedMessages,
+      });
+      client.writeQuery({
+        query: CURRENT_USER,
+        data: {
+          me:{
+          ...user,
+          linked: updatedLinkedMessages,
+        }},
+      });
+    } else {
+      const linkedUserIndexInStore = user.linked.findIndex((linkedUser) => {
+        return linkedUser.user._id.toString() === sentMessage.toFriendID;
+      });
+      if (linkedUserIndexInStore === -1) {
+        throw new Error(
+          "Messasge received from user does not exist in friendslist"
+        );
+      }
+      const updatedLinkedMessages = user.linked.map((linkedUser, index) => {
+        if (index === linkedUserIndexInStore) {
+          return {
+            ...linkedUser,
+            messages: linkedUser.messages.concat(sentMessage),
+          };
+        }
+        return linkedUser;
+      });
+      console.log({
+        ...user,
+        linked: updatedLinkedMessages,
+      });
+      client.writeQuery({
+        query: CURRENT_USER,
+        data: {
+          me: {
+            ...user,
+            linked: updatedLinkedMessages,
+          },
+        },
+      });
     }
-    console.log('second')
-    console.log(client.readQuery({query:CURRENT_USER}))
-  }
-  const sentMessage = useSubscription(MESSAGE_SENT,{
-    onSubscriptionData:({subscriptionData})=>{
-      const sentMessage = subscriptionData.data.messageSent
-      updateCacheWithSentMessage(sentMessage)
-    }
-  })
+  };
+
+  const sentMessage = useSubscription(MESSAGE_SENT, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      const sentMessage = subscriptionData.data.messageSent;
+      try {
+        updateStateWithSentMessage(sentMessage);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
 
   //Whenever the data from the server is received, updates the local state to include all Users
   useEffect(() => {
@@ -138,7 +183,6 @@ function App() {
       </div>
     );
   }
-
 
   return (
     <div className="app full-height">

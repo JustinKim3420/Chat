@@ -2,14 +2,40 @@ import React, { useEffect, useState } from "react";
 import { ListGroup, Button } from "react-bootstrap";
 
 import { ADD_FRIEND, DELETE_FRIEND } from "../mutations";
+import { FRIEND_ADDED, FRIEND_DELETED } from "../subscriptions";
 import { CURRENT_USER } from "../queries";
-import { useMutation } from "@apollo/client";
+import { useMutation, useSubscription, useApolloClient } from "@apollo/client";
 
 const Users = ({ allUsers, user, setUser, notify }) => {
   const [linkedUsers, setLinkedUser] = useState([]);
 
+  const client = useApolloClient()
+
+  const updateCacheWithUpdatedLinkedUser = ((updatedLinkedUsers)=>{
+
+    // const dataInStore = client.readQuery({query:CURRENT_USER})
+    //   client.writeQuery({
+    //     query:CURRENT_USER,
+    //     data:{
+    //       currentUser:dataInStore.me.linked[linkedUserIndexInStore].messages.concat(sentMessage)
+    //   }})
+    }
+  )
+
+  const friendAdded = useSubscription(FRIEND_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      const updatedLinkedUsers = subscriptionData.data.friendAdded.linked;
+      updateCacheWithUpdatedLinkedUser(updatedLinkedUsers)
+    },
+  });
+  const friendDeleted = useSubscription(FRIEND_DELETED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      const updatedLinkedUsers = subscriptionData.data.friendAdded.linked;
+      updateCacheWithUpdatedLinkedUser(updatedLinkedUsers)
+    },
+  });
   const [addFriend, userAfterAdd] = useMutation(ADD_FRIEND, {
-    refetchQueries:[{query:CURRENT_USER}],
+    refetchQueries: [{ query: CURRENT_USER }],
     onError: (error) => {
       console.log(error.graphQLErrors);
       notify(error.graphQLErrors[0].message, "danger");
@@ -18,19 +44,17 @@ const Users = ({ allUsers, user, setUser, notify }) => {
 
   //Deletes friend and the messages sent.
   const [deleteFriend, userAfterDelete] = useMutation(DELETE_FRIEND, {
-    refetchQueries:[{query:CURRENT_USER}],
+    refetchQueries: [{ query: CURRENT_USER }],
     onError: (error) => {
       console.log(error.graphQLErrors);
       notify(error.graphQLErrors[0].message, "danger");
     },
   });
 
-
   //Updating the user by taking the current user's info and updating the linked key
   useEffect(() => {
-    console.log('userAfterAdd')
     if (userAfterAdd.data) {
-      const updatedLinkUser = {...user};
+      const updatedLinkUser = { ...user };
       updatedLinkUser.linked = userAfterAdd.data.addFriend.linked;
       setUser(updatedLinkUser);
     }
@@ -38,9 +62,8 @@ const Users = ({ allUsers, user, setUser, notify }) => {
   }, [userAfterAdd.data]);
 
   useEffect(() => {
-    console.log('userAfterDelete')
     if (userAfterDelete.data) {
-      const updatedLinkUser = {...user};
+      const updatedLinkUser = { ...user };
       updatedLinkUser.linked = userAfterDelete.data.deleteFriend.linked;
       setUser(updatedLinkUser);
     }
@@ -49,10 +72,10 @@ const Users = ({ allUsers, user, setUser, notify }) => {
 
   useEffect(() => {
     if (user.linked) {
-        const linkedUsers = user.linked.map((linkedUser) => {
-          return linkedUser.user.username;
-        });
-        setLinkedUser(linkedUsers);
+      const linkedUsers = user.linked.map((linkedUser) => {
+        return linkedUser.user.username;
+      });
+      setLinkedUser(linkedUsers);
     }
   }, [user.linked]);
 

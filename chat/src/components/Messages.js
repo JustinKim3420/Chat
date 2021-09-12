@@ -24,7 +24,7 @@ const Messages = ({ currentUser, focusedUser }) => {
       setArrayOfMessages([...arrayOfMessages, sentMessage.data.sendMessage]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sentMessage.data]);
+  },[]);
 
   useEffect(() => {
     if (currentUser.linked && focusedUser) {

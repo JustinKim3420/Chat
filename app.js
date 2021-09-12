@@ -104,6 +104,8 @@ const typeDefs = gql`
 
   type Subscription {
     messageSent: Message!
+    friendAdded: User!
+    friendDeleted:User!
   }
 `;
 
@@ -145,21 +147,32 @@ const resolvers = {
         }
       }
       const { addUser } = require("./resolvers/mutations");
+      
       return addUser(args.username, args.password, args.email);
     },
-    addFriend: (root, args, context) => {
+    addFriend: async (root, args, context) => {
       if (!context.currentUser) {
         throw new UserInputError("Invalid token");
       }
       const { addFriend } = require("./resolvers/mutations");
-      return addFriend(context.currentUser.username, args.friendUsername);
+
+      const updatedUser = await addFriend(context.currentUser.username, args.friendUsername)
+
+      await pubsub.publish("MESSAGE_SENT", { friendAdded: updatedUser });
+
+      return updatedUser;
     },
-    deleteFriend: (root, args, context) => {
+    deleteFriend: async (root, args, context) => {
       if (!context.currentUser) {
         throw new UserInputError("Invalid token");
       }
       const { deleteFriend } = require("./resolvers/mutations");
-      return deleteFriend(context.currentUser.username, args.friendUsername);
+
+      const updatedUser = deleteFriend(context.currentUser.username, args.friendUsername);
+
+      await pubsub.publish("MESSAGE_SENT", { friendDeleted: updatedUser });
+
+      return updatedUser
     },
     login: (root, args) => {
       if (!args.username) {
@@ -193,6 +206,16 @@ const resolvers = {
         return pubsub.asyncIterator(["MESSAGE_SENT"])
       },
     },
+    friendAdded:{
+      susbcribe:()=>{
+        return pubsub.asyncIterator(["FRIEND_ADDED"])
+      }
+    },
+    friendDeleted:{
+      susbcribe:()=>{
+        return pubsub.asyncIterator(["FRIEND_DELETED"])
+      }
+    }
   },
 };
 
